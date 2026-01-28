@@ -2,9 +2,64 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Podcast Summarizer</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; }
+        .container { border: 1px solid #ddd; padding: 20px; border-radius: 8px; }
+        button { background-color: #007bff; color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 5px; }
+        button:hover { background-color: #0056b3; }
+        #loading { display: none; color: #666; font-style: italic; margin-top: 10px; }
+        .result-box { background: #f9f9f9; padding: 15px; border-left: 4px solid #007bff; margin-top: 20px; white-space: pre-wrap;}
+    </style>
 </head>
 <body>
+    <h1>🎙️ Podcast Summarizer (Powered by Groq)</h1>
+    <div class="container">
+        <p>Upload a short audio file (MP3, WAV) to get a summary.</p>
+        <input type="file" id="audioFile" accept="audio/*">
+        <br><br>
+        <button onclick="uploadFile()">Summarize Episode</button>
+        <p id="loading">⏳ Processing... (Groq is fast, but give it a moment)</p>
+    </div>
 
+    <div id="result" style="display:none;">
+        <h3>📝 Summary</h3>
+        <div id="summaryContent" class="result-box"></div>
+
+        <h3>📜 Transcript Preview</h3>
+        <div id="transcriptContent" class="result-box"></div>
+    </div>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('audioFile');
+            if (fileInput.files.length === 0) { alert("Please select a file!"); return; }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result').style.display = 'none';
+
+            try {
+                const response = await fetch('/process', { method: 'POST', body: formData });
+                const data = await response.json();
+
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    document.getElementById('summaryContent').innerText = data.summary;
+                    document.getElementById('transcriptContent').innerText = data.transcript_preview;
+                    document.getElementById('result').style.display = 'block';
+                }
+            } catch (error) {
+                console.error(error);
+                alert("An error occurred during upload.");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+    </script>
 </body>
 </html>
